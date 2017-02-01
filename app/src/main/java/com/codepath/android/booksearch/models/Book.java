@@ -1,5 +1,7 @@
 package com.codepath.android.booksearch.models;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.text.TextUtils;
 
 import org.json.JSONArray;
@@ -8,26 +10,26 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class Book {
-    private String openLibraryId;
-    private String author;
-    private String title;
+public class Book implements Parcelable {
+    private String mOpenLibraryId;
+    private String mAuthor;
+    private String mTitle;
 
     public String getOpenLibraryId() {
-        return openLibraryId;
+        return mOpenLibraryId;
     }
 
     public String getTitle() {
-        return title;
+        return mTitle;
     }
 
     public String getAuthor() {
-        return author;
+        return mAuthor;
     }
 
     // Get book cover from covers API
     public String getCoverUrl() {
-        return "http://covers.openlibrary.org/b/olid/" + openLibraryId + "-L.jpg?default=false";
+        return "http://covers.openlibrary.org/b/olid/" + mOpenLibraryId + "-L.jpg?default=false";
     }
 
     // Returns a Book given the expected JSON
@@ -37,13 +39,13 @@ public class Book {
             // Deserialize json into object fields
             // Check if a cover edition is available
             if (jsonObject.has("cover_edition_key")) {
-                book.openLibraryId = jsonObject.getString("cover_edition_key");
+                book.mOpenLibraryId = jsonObject.getString("cover_edition_key");
             } else if(jsonObject.has("edition_key")) {
                 final JSONArray ids = jsonObject.getJSONArray("edition_key");
-                book.openLibraryId = ids.getString(0);
+                book.mOpenLibraryId = ids.getString(0);
             }
-            book.title = jsonObject.has("title_suggest") ? jsonObject.getString("title_suggest") : "";
-            book.author = getAuthor(jsonObject);
+            book.mTitle = jsonObject.has("title_suggest") ? jsonObject.getString("title_suggest") : "";
+            book.mAuthor = getAuthor(jsonObject);
         } catch (JSONException e) {
             e.printStackTrace();
             return null;
@@ -87,4 +89,37 @@ public class Book {
         }
         return books;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.mOpenLibraryId);
+        dest.writeString(this.mAuthor);
+        dest.writeString(this.mTitle);
+    }
+
+    public Book() {
+    }
+
+    protected Book(Parcel in) {
+        this.mOpenLibraryId = in.readString();
+        this.mAuthor = in.readString();
+        this.mTitle = in.readString();
+    }
+
+    public static final Parcelable.Creator<Book> CREATOR = new Parcelable.Creator<Book>() {
+        @Override
+        public Book createFromParcel(Parcel source) {
+            return new Book(source);
+        }
+
+        @Override
+        public Book[] newArray(int size) {
+            return new Book[size];
+        }
+    };
 }
